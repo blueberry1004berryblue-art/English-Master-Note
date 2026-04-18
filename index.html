@@ -39,7 +39,7 @@
     <h1>教科書スキャナー</h1>
     <label class="upload-btn">
         📷 QRコードをスキャン
-        <input type="file" id="upload" accept="image/*" style="display:none">
+        <input type="file" id="upload" accept="image/*" capture="environment" style="display:none">
     </label>
     
     <div id="status">QRコードを読み取ってください</div>
@@ -73,13 +73,21 @@
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 
                 const code = jsQR(imgData.data, imgData.width, imgData.height);
+                
+                // --- ここでメモリを解放（自動で消す処理） ---
+                // 使い終わった画像のURLを破棄して、スマホのメモリを空けます
+                if (img.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(img.src);
+                }
+
                 if (code) {
                     autoSelectUnit(code.data);
                 } else {
-                    status.innerText = "❌ QRコードが見つかりません。";
+                    status.innerText = "❌ QRコードが見つかりません。正面から撮ってください。";
                 }
             };
-            img.src = event.target.result;
+            // 読み取ったファイルを一時的なURL（Blob）として扱う
+            img.src = URL.createObjectURL(file);
         };
         reader.readAsDataURL(file);
     });
