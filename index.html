@@ -6,33 +6,38 @@
     <title>教科書スキャナーAI</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; color: #333; text-align: center; }
-        .app { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .upload-btn { display: block; width: 100%; padding: 20px; background: #3498db; color: white; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-sizing: border-box; }
-        #status { background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 20px 0; border: 1px solid #ddd; }
+        :root { --main-color: #3498db; --accent-color: #e74c3c; --bg-color: #f0f2f5; }
+        body { font-family: sans-serif; background: var(--bg-color); padding: 20px; color: #333; text-align: center; margin: 0; }
+        .app { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 80vh; }
         
-        /* ボタン類 */
-        .part-btn { background: #2c3e50; color: white; border: none; padding: 15px 25px; border-radius: 10px; cursor: pointer; margin: 5px; font-size: 1rem; width: 85%; }
-        .back-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
+        /* ボタンのデザイン */
+        .upload-btn { display: block; width: 100%; padding: 20px; background: var(--main-color); color: white; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-sizing: border-box; transition: 0.2s; }
+        .upload-btn:active { transform: scale(0.98); opacity: 0.9; }
+        .part-btn { background: #2c3e50; color: white; border: none; padding: 15px 25px; border-radius: 10px; cursor: pointer; margin: 8px auto; font-size: 1rem; width: 90%; display: block; }
+        .back-btn { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; }
+
+        /* 状態表示 */
+        #status { background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 20px 0; border: 1px solid #ddd; font-size: 0.9rem; line-height: 1.4; }
         
-        /* 単語リスト */
+        /* 単語リストのデザイン */
         .word-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; text-align: left; }
         .word-main { flex-grow: 1; }
-        .en { font-weight: bold; color: #3498db; font-size: 1.1rem; display: block; }
+        .en { font-weight: bold; color: var(--main-color); font-size: 1.1rem; display: block; }
         .ja { color: #555; font-size: 0.95rem; }
-        .pos-badge { background: #e2e8f0; color: #4a5568; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-right: 10px; min-width: 25px; text-align: center; font-weight: bold; border: 1px solid #cbd5e0; }
+        .pos-badge { background: #e2e8f0; color: #4a5568; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-right: 12px; min-width: 30px; text-align: center; font-weight: bold; border: 1px solid #cbd5e0; }
     </style>
 </head>
 <body>
 
 <div class="app">
     <h1>教科書スキャナー</h1>
+    
     <label class="upload-btn">
-        📷 QRコードを撮影
+        📷 QRコードをスキャン
         <input type="file" id="upload" accept="image/*" capture="environment" style="display:none">
     </label>
     
-    <div id="status">QRコードを読み取ってください</div>
+    <div id="status">カメラでQRコードを撮ってください</div>
     <div id="select-area"></div>
     <div id="result"></div>
 </div>
@@ -43,36 +48,37 @@
     const selectArea = document.getElementById('select-area');
     const resultDiv = document.getElementById('result');
     
-    let currentUnitData = null; // 現在のQRに紐づく全Partデータ
-    let lastUrl = ""; // 直前に読み込んだURL
+    let currentUnitData = null;
 
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        status.innerText = "⌛ 読み取り中...";
-        resetDisplay();
+        // 表示のリセット
+        status.innerText = "⌛ QRコードを解析中...";
+        selectArea.innerHTML = "";
+        resultDiv.innerHTML = "";
 
         const reader = new FileReader();
         reader.onload = (event) => {
             const img = new Image();
-            img.onload = async () => {
+            img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                canvas.width = img.width; canvas.height = img.height;
+                canvas.width = img.width;
+                canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
+                
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
                 const code = jsQR(imgData.data, imgData.width, imgData.height);
-                
-                // メモリ解放（自動で消す）
+
+                // メモリ解放（写真をスマホから消すような処理）
                 if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
 
                 if (code) {
-                    lastUrl = code.data;
-                    autoSelectUnit(code.data);
+                    processQR(code.data);
                 } else {
-                    status.innerText = "❌ QRコードが見つかりません。正面から撮ってください。";
+                    status.innerText = "❌ QRコードが見つかりません。正面から明るい場所で撮影してください。";
                 }
             };
             img.src = URL.createObjectURL(file);
@@ -80,42 +86,36 @@
         reader.readAsDataURL(file);
     });
 
-    // 画面表示をリセットする関数
-    function resetDisplay() {
-        selectArea.innerHTML = "";
-        resultDiv.innerHTML = "";
-    }
-
-    async function autoSelectUnit(url) {
+    async function processQR(url) {
         try {
             const res = await fetch('words.json');
+            if (!res.ok) throw new Error();
             const db = await res.json();
             currentUnitData = db[url];
 
-            if (!currentUnitData) {
-                status.innerHTML = `⚠️ 未登録のURLです<br><small style="word-break:break-all; font-size:0.6rem;">${url}</small>`;
-                return;
-            }
-
-            const partNames = Object.keys(currentUnitData);
-
-            if (partNames.length === 1) {
-                // 項目が1つの場合も、一応戻れるように処理
-                showWords(partNames[0]);
+            if (currentUnitData) {
+                const partNames = Object.keys(currentUnitData);
+                if (partNames.length === 1) {
+                    // 項目が1つなら自動表示
+                    showWords(partNames[0]);
+                } else {
+                    // 複数あれば選択画面へ
+                    showPartButtons();
+                }
             } else {
-                showPartButtons();
+                status.innerHTML = `⚠️ 未登録のURLです。JSONに追記してください。<br><small style="word-break:break-all; font-size:0.7rem; color:#999;">${url}</small>`;
             }
         } catch (e) {
-            status.innerText = "❌ データの読み込みに失敗しました。";
+            status.innerText = "❌ words.json が見つからないか、形式が正しくありません。";
         }
     }
 
-    // Part選択ボタンを表示する関数
     function showPartButtons() {
-        resetDisplay();
-        status.innerText = "表示するPartを選んでください";
-        const partNames = Object.keys(currentUnitData);
-        partNames.forEach(name => {
+        selectArea.innerHTML = "";
+        resultDiv.innerHTML = "";
+        status.innerText = "表示するPartを選択してください";
+        
+        Object.keys(currentUnitData).forEach(name => {
             const btn = document.createElement('button');
             btn.className = 'part-btn';
             btn.innerText = name;
@@ -124,12 +124,11 @@
         });
     }
 
-    // 単語一覧を表示する関数
     function showWords(name) {
         const words = currentUnitData[name];
         status.innerHTML = `✅ <b>${name}</b> を表示中`;
         
-        // 「戻る」ボタンを作成
+        // 戻るボタンの表示
         selectArea.innerHTML = `<button class="back-btn" onclick="showPartButtons()">← 他のPartを選ぶ</button>`;
         
         resultDiv.innerHTML = words.map(w => `
