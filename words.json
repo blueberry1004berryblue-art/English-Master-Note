@@ -1,14 +1,37 @@
 {
   "https://s.meijitosho.co.jp/naruhod/#/entt2#kxkrlkr": {
-    "unit": "Unit 0",
-    "words": [
-      { "en": "same", "ja": "同じ、同一の" },
-      { "en": "experience", "ja": "経験、体験" },
-      { "en": "actually", "ja": "実は、本当は" },
-      { "en": "ramen", "ja": "ラーメン" },
-      { "en": "instant", "ja": "即座の、緊急の" },
-      { "en": "noodle", "ja": "ヌードル、めん" },
-      { "en": "by the way", "ja": "ところで" }
+    "Unit 0": [
+      { "en": "same", "pos": "形", "ja": "同じ、同一の" },
+      { "en": "experience", "pos": "名", "ja": "経験、体験" },
+      { "en": "actually", "pos": "副", "ja": "実は、本当は" },
+      { "en": "ramen", "pos": "名", "ja": "ラーメン" },
+      { "en": "instant", "pos": "形", "ja": "即座の、緊急の、(食べ物が)即座の" },
+      { "en": "noodle", "pos": "名", "ja": "ヌードル、めん" },
+      { "en": "by the way", "pos": "熟語", "ja": "ところで" }
+    ]
+  },
+  "https://s.meijitosho.co.jp/naruhod/#/entt2#elkuyel": {
+    "Unit 1 Part 1": [
+      { "en": "golden", "pos": "形", "ja": "金色の、すばらしい" },
+      { "en": "holiday", "pos": "名", "ja": "休日、休暇" },
+      { "en": "Singapore", "pos": "名", "ja": "シンガポール" },
+      { "en": "flight", "pos": "名", "ja": "飛ぶこと、飛行、(飛行機の)便、空の便" },
+      { "en": "arrive", "pos": "動", "ja": "到着" },
+      { "en": "airport", "pos": "名", "ja": "空港、飛行場" },
+      { "en": "soon", "pos": "副", "ja": "すぐに、まもなく" },
+      { "en": "Daniel", "pos": "名", "ja": "ダニエル" },
+      { "en": "the 'Golden Week' holidays", "ja": "ゴールデンウィーク" },
+      { "en": "See you.", "ja": "またね。" }
+    ],
+    "Unit 1 Part 2": [
+      { "en": "will", "pos": "助", "ja": "・・・でしょう、・・・だろう、・・・するつもりだ" },
+      { "en": "excited", "pos": "形", "ja": "わくわくした" },
+      { "en": "seafood", "pos": "名", "ja": "シーフード" },
+      { "en": "reservation", "pos": "名", "ja": "予約" },
+      { "en": "Merlion Park", "ja": "マーライオン公園" },
+      { "en": "the Merlion", "ja": "マーライオン" },
+      { "en": "you'll", "ja": "you willの短縮形" },
+      { "en": "I'll", "ja": "i willの短縮形" }
     ]
   }
 }
