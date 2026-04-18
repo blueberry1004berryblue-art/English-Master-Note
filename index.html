@@ -54,8 +54,7 @@
         const file = e.target.files[0];
         if (!file) return;
 
-        // 表示のリセット
-        status.innerText = "⌛ QRコードを解析中...";
+        status.innerText = "⌛ iPhone用に最適化して解析中...";
         selectArea.innerHTML = "";
         resultDiv.innerHTML = "";
 
@@ -65,20 +64,34 @@
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
+
+                // --- iPhone対策: 解析用の画像サイズを調整 ---
+                // 解像度が高すぎると失敗するため、最大幅1000px程度に抑える
+                const maxSide = 1000;
+                let width = img.width;
+                let height = img.height;
+                if (width > height) {
+                    if (width > maxSide) { height *= maxSide / width; width = maxSide; }
+                } else {
+                    if (height > maxSide) { width *= maxSide / height; height = maxSide; }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
                 
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imgData.data, imgData.width, imgData.height);
+                // jsQRに渡す（inversionAttemptsを'dontInvert'以外にすると精度が上がる）
+                const code = jsQR(imgData.data, imgData.width, imgData.height, {
+                    inversionAttempts: "dontInvert",
+                });
 
-                // メモリ解放（写真をスマホから消すような処理）
                 if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
 
                 if (code) {
                     processQR(code.data);
                 } else {
-                    status.innerText = "❌ QRコードが見つかりません。正面から明るい場所で撮影してください。";
+                    status.innerText = "❌ 読み取れませんでした。もう少し離して、QRコードを画面の真ん中に小さめに写してみてください。";
                 }
             };
             img.src = URL.createObjectURL(file);
