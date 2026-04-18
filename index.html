@@ -2,26 +2,22 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>教科書単語検索アプリ (JSON版)</title>
+    <title>AI英単語照合スキャナー</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; max-width: 500px; width: 100%; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h1 { font-size: 1.3rem; color: #2c3e50; text-align: center; margin-bottom: 20px; }
-        #status { color: #7f8c8d; text-align: center; margin-bottom: 20px; font-size: 0.9rem; padding: 10px; border-radius: 8px; background: #f8f9fa; }
-        .unit-badge { background: #34495e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-bottom: 15px; display: inline-block; }
-        .word-card { background: #ffffff; border: 1px solid #edf2f7; border-left: 5px solid #3498db; padding: 12px; margin-bottom: 10px; border-radius: 6px; }
-        .en { font-weight: bold; font-size: 1.1rem; color: #2980b9; }
-        .ja { color: #2c3e50; margin-top: 5px; font-size: 0.95rem; }
-        input[type="file"] { display: block; margin: 0 auto 20px auto; width: 100%; padding: 10px; border: 2px dashed #cbd5e0; border-radius: 10px; cursor: pointer; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #status { background: #eee; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 0.9rem; }
+        .word-card { border-left: 5px solid #3498db; background: #f9f9f9; padding: 10px; margin: 5px 0; display: flex; justify-content: space-between; }
+        .en { font-weight: bold; color: #2980b9; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>教科書スキャナー</h1>
+        <h1>AI単語スキャナー</h1>
         <input type="file" id="upload" accept="image/*">
-        <div id="status">準備完了</div>
+        <div id="status">準備完了（写真をアップしてね）</div>
         <div id="result"></div>
     </div>
 
@@ -30,64 +26,35 @@
         const status = document.getElementById('status');
         const resultDiv = document.getElementById('result');
 
-        // JSONファイルを読み込んで単語を表示するメイン関数
-        async function processQRCode(scannedUrl) {
-            try {
-                status.innerText = "データを照合中...";
-                
-                // 外部のwords.jsonを読み込む
-                const response = await fetch('words.json');
-                if (!response.ok) throw new Error("JSONファイルの読み込みに失敗しました");
-                
-                const wordDatabase = await response.json();
-                const data = wordDatabase[scannedUrl];
-
-                if (data) {
-                    status.innerText = "✅ データを取得しました";
-                    let html = `<div class="unit-badge">${data.unit}</div>`;
-                    data.words.forEach(w => {
-                        html += `
-                            <div class="word-card">
-                                <div class="en">${w.en}</div>
-                                <div class="ja">${w.ja}</div>
-                            </div>
-                        `;
-                    });
-                    resultDiv.innerHTML = html;
-                } else {
-                    status.innerText = "⚠️ 未登録のURLです";
-                    resultDiv.innerHTML = `
-                        <p style="color:red; font-size:0.8rem; word-break:break-all;">URL: ${scannedUrl}</p>
-                        <p style="font-size:0.9rem;">このURLをwords.jsonに追加してください。</p>
-                    `;
-                }
-            } catch (error) {
-                status.innerText = "❌ エラー: " + error.message;
-            }
-        }
-
-        fileInput.addEventListener('change', e => {
+        fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            status.innerText = "画像解析中...";
+            status.innerText = "1/2: QRコードを解析中...";
             resultDiv.innerHTML = "";
 
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = async (event) => {
                 const img = new Image();
-                img.onload = function() {
+                img.onload = async () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+                    canvas.width = img.width; canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
-                    
+
+                    // 1. QRコード検出
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const code = jsQR(imageData.data, imageData.width, imageData.height);
 
                     if (code) {
-                        processQRCode(code.data);
+                        status.innerText = "2/2: 文字を認識中（少し時間がかかります）...";
+                        
+                        // 2. OCR実行 (英語のみ認識させる)
+                        const { data: { text } } = await Tesseract.recognize(img, 'eng');
+                        const detectedText = text.toLowerCase();
+
+                        // 3. JSON読み込みと照合
+                        matchAndDisplay(code.data, detectedText);
                     } else {
                         status.innerText = "❌ QRコードが見つかりません。";
                     }
@@ -96,6 +63,37 @@
             };
             reader.readAsDataURL(file);
         });
+
+        async function matchAndDisplay(url, detectedText) {
+            try {
+                const response = await fetch('words.json');
+                const wordDatabase = await response.json();
+                const wordList = wordDatabase[url];
+
+                if (wordList) {
+                    // OCRで見つかった単語だけを抽出
+                    const foundWords = wordList.filter(item => 
+                        detectedText.includes(item.en.toLowerCase())
+                    );
+
+                    if (foundWords.length > 0) {
+                        status.innerText = `✅ ${foundWords.length} 個の単語を特定しました`;
+                        resultDiv.innerHTML = foundWords.map(w => `
+                            <div class="word-card">
+                                <span class="en">${w.en}</span>
+                                <span class="ja">${w.ja}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        status.innerText = "QRは読めましたが、写真の中に登録済みの単語が見つかりません。";
+                    }
+                } else {
+                    status.innerText = "未登録のURLです: " + url;
+                }
+            } catch (e) {
+                status.innerText = "エラー: words.jsonが見つかりません。";
+            }
+        }
     </script>
 </body>
 </html>
