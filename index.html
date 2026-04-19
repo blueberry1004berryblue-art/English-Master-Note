@@ -8,23 +8,27 @@
     <style>
         :root { --main-color: #3498db; --accent-color: #e74c3c; --bg-color: #f0f2f5; }
         body { font-family: sans-serif; background: var(--bg-color); padding: 20px; color: #333; text-align: center; margin: 0; }
-        .app { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 80vh; }
+        .app { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 90vh; }
         
-        /* ボタンのデザイン */
-        .upload-btn { display: block; width: 100%; padding: 20px; background: var(--main-color); color: white; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 1.1rem; box-sizing: border-box; transition: 0.2s; }
-        .upload-btn:active { transform: scale(0.98); opacity: 0.9; }
-        .part-btn { background: #2c3e50; color: white; border: none; padding: 15px 25px; border-radius: 10px; cursor: pointer; margin: 8px auto; font-size: 1rem; width: 90%; display: block; }
-        .back-btn { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; }
+        /* ビデオプレビューエリア */
+        #video-container { width: 100%; position: relative; border-radius: 15px; overflow: hidden; background: #000; margin-bottom: 15px; }
+        #video { width: 100%; height: auto; display: block; }
+        #scan-line { position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: var(--main-color); box-shadow: 0 0 10px var(--main-color); opacity: 0.7; }
 
-        /* 状態表示 */
-        #status { background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 20px 0; border: 1px solid #ddd; font-size: 0.9rem; line-height: 1.4; }
-        
-        /* 単語リストのデザイン */
-        .word-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; text-align: left; }
+        /* メッセージとボタン */
+        #status { background: #f8f9fa; padding: 12px; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; font-size: 0.9rem; min-height: 1.4rem; }
+        .part-btn { background: #2c3e50; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; margin: 8px auto; font-size: 1rem; width: 90%; display: block; }
+        .back-btn { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; width: 100%; }
+        .rescan-btn { background: #95a5a6; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; margin: 8px auto; width: 90%; }
+
+        /* 単語リスト */
+        .word-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
         .word-main { flex-grow: 1; }
         .en { font-weight: bold; color: var(--main-color); font-size: 1.1rem; display: block; }
-        .ja { color: #555; font-size: 0.95rem; }
-        .pos-badge { background: #e2e8f0; color: #4a5568; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-right: 12px; min-width: 30px; text-align: center; font-weight: bold; border: 1px solid #cbd5e0; }
+        .ja { color: #555; font-size: 0.9rem; }
+        .pos-badge { background: #e2e8f0; color: #4a5568; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-right: 10px; min-width: 30px; text-align: center; font-weight: bold; border: 1px solid #cbd5e0; }
+        
+        #canvas { display: none; }
     </style>
 </head>
 <body>
@@ -32,102 +36,95 @@
 <div class="app">
     <h1>教科書スキャナー</h1>
     
-    <label class="upload-btn">
-        📷 QRコードをスキャン
-        <input type="file" id="upload" accept="image/*" capture="environment" style="display:none">
-    </label>
+    <div id="video-container">
+        <video id="video" playsinline></video>
+        <div id="scan-line"></div>
+    </div>
     
-    <div id="status">カメラでQRコードを撮ってください</div>
+    <div id="status">カメラを読み込んでいます...</div>
     <div id="select-area"></div>
     <div id="result"></div>
 </div>
 
+<canvas id="canvas"></canvas>
+
 <script>
-    const fileInput = document.getElementById('upload');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const status = document.getElementById('status');
     const selectArea = document.getElementById('select-area');
     const resultDiv = document.getElementById('result');
-    
+    const videoContainer = document.getElementById('video-container');
+
     let currentUnitData = null;
+    let isScanning = true;
 
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    // カメラ起動（facingMode: environment で背面カメラ指定）
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then((stream) => {
+            video.srcObject = stream;
+            video.setAttribute("playsinline", true);
+            video.play();
+            status.innerText = "QRコードを映してください";
+            requestAnimationFrame(tick);
+        })
+        .catch(err => {
+            status.innerText = "❌ カメラの起動に失敗しました。ブラウザの設定で許可してください。";
+        });
 
-        status.innerText = "⌛ iPhone用に最適化して解析中...";
-        selectArea.innerHTML = "";
-        resultDiv.innerHTML = "";
+    function tick() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA && isScanning) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                // --- iPhone対策: 解析用の画像サイズを調整 ---
-                // 解像度が高すぎると失敗するため、最大幅1000px程度に抑える
-                const maxSide = 1000;
-                let width = img.width;
-                let height = img.height;
-                if (width > height) {
-                    if (width > maxSide) { height *= maxSide / width; width = maxSide; }
-                } else {
-                    if (height > maxSide) { width *= maxSide / height; height = maxSide; }
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                // jsQRに渡す（inversionAttemptsを'dontInvert'以外にすると精度が上がる）
-                const code = jsQR(imgData.data, imgData.width, imgData.height, {
-                    inversionAttempts: "dontInvert",
-                });
-
-                if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-
-                if (code) {
-                    processQR(code.data);
-                } else {
-                    status.innerText = "❌ 読み取れませんでした。もう少し離して、QRコードを画面の真ん中に小さめに写してみてください。";
-                }
-            };
-            img.src = URL.createObjectURL(file);
-        };
-        reader.readAsDataURL(file);
-    });
+            if (code) {
+                isScanning = false; 
+                processQR(code.data);
+            }
+        }
+        requestAnimationFrame(tick);
+    }
 
     async function processQR(url) {
         try {
+            status.innerText = "⌛ 読み取り成功。準備中...";
             const res = await fetch('words.json');
-            if (!res.ok) throw new Error();
             const db = await res.json();
             currentUnitData = db[url];
 
             if (currentUnitData) {
+                videoContainer.style.display = "none"; // 成功したらカメラを隠す
                 const partNames = Object.keys(currentUnitData);
                 if (partNames.length === 1) {
-                    // 項目が1つなら自動表示
                     showWords(partNames[0]);
                 } else {
-                    // 複数あれば選択画面へ
                     showPartButtons();
                 }
             } else {
-                status.innerHTML = `⚠️ 未登録のURLです。JSONに追記してください。<br><small style="word-break:break-all; font-size:0.7rem; color:#999;">${url}</small>`;
+                status.innerHTML = `⚠️ 未登録のQRです<br><small>${url}</small>`;
+                // 3秒後にスキャン再開
+                setTimeout(() => { 
+                    if (!currentUnitData) {
+                        isScanning = true; 
+                        status.innerText = "QRコードを映してください";
+                    }
+                }, 3000);
             }
         } catch (e) {
-            status.innerText = "❌ words.json が見つからないか、形式が正しくありません。";
+            status.innerText = "JSONの読み込みに失敗しました。";
         }
     }
 
     function showPartButtons() {
         selectArea.innerHTML = "";
         resultDiv.innerHTML = "";
-        status.innerText = "表示するPartを選択してください";
-        
+        status.innerText = "Partを選択してください";
         Object.keys(currentUnitData).forEach(name => {
             const btn = document.createElement('button');
             btn.className = 'part-btn';
@@ -135,13 +132,19 @@
             btn.onclick = () => showWords(name);
             selectArea.appendChild(btn);
         });
+        // スキャンし直しボタン
+        const rescanBtn = document.createElement('button');
+        rescanBtn.className = 'rescan-btn';
+        rescanBtn.innerText = "📷 別のQRをスキャンする";
+        rescanBtn.onclick = restartScan;
+        selectArea.appendChild(rescanBtn);
     }
 
     function showWords(name) {
         const words = currentUnitData[name];
         status.innerHTML = `✅ <b>${name}</b> を表示中`;
         
-        // 戻るボタンの表示
+        // 戻るボタン
         selectArea.innerHTML = `<button class="back-btn" onclick="showPartButtons()">← 他のPartを選ぶ</button>`;
         
         resultDiv.innerHTML = words.map(w => `
@@ -154,7 +157,15 @@
             </div>
         `).join('');
     }
-</script>
 
+    function restartScan() {
+        isScanning = true;
+        currentUnitData = null;
+        videoContainer.style.display = "block";
+        selectArea.innerHTML = "";
+        resultDiv.innerHTML = "";
+        status.innerText = "QRコードを映してください";
+    }
+</script>
 </body>
 </html>
