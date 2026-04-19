@@ -10,18 +10,22 @@
         body { font-family: sans-serif; background: var(--bg-color); padding: 20px; color: #333; text-align: center; margin: 0; }
         .app { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 90vh; }
         
-        /* ビデオプレビューエリア */
+        /* ビデオエリア：全画面スキャンを意識したデザイン */
         #video-container { width: 100%; position: relative; border-radius: 15px; overflow: hidden; background: #000; margin-bottom: 15px; }
         #video { width: 100%; height: auto; display: block; }
-        #scan-line { position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: var(--main-color); box-shadow: 0 0 10px var(--main-color); opacity: 0.7; }
+        
+        /* 四隅のガイドを表示（真ん中じゃなくて良いことを示す） */
+        .corner { position: absolute; width: 20px; height: 20px; border: 3px solid var(--main-color); opacity: 0.5; }
+        .top-left { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+        .top-right { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 10px; right: 10px; border-left: none; border-top: none; }
 
-        /* メッセージとボタン */
-        #status { background: #f8f9fa; padding: 12px; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; font-size: 0.9rem; min-height: 1.4rem; }
+        #status { background: #f8f9fa; padding: 12px; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; font-size: 0.9rem; }
         .part-btn { background: #2c3e50; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; margin: 8px auto; font-size: 1rem; width: 90%; display: block; }
         .back-btn { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; font-weight: bold; width: 100%; }
         .rescan-btn { background: #95a5a6; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; margin: 8px auto; width: 90%; }
 
-        /* 単語リスト */
         .word-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
         .word-main { flex-grow: 1; }
         .en { font-weight: bold; color: var(--main-color); font-size: 1.1rem; display: block; }
@@ -38,10 +42,13 @@
     
     <div id="video-container">
         <video id="video" playsinline></video>
-        <div id="scan-line"></div>
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
     </div>
     
-    <div id="status">カメラを読み込んでいます...</div>
+    <div id="status">カメラを起動中...</div>
     <div id="select-area"></div>
     <div id="result"></div>
 </div>
@@ -59,47 +66,70 @@
 
     let currentUnitData = null;
     let isScanning = true;
+    let videoStream = null;
 
-    // カメラ起動（facingMode: environment で背面カメラ指定）
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then((stream) => {
-            video.srcObject = stream;
-            video.setAttribute("playsinline", true);
-            video.play();
-            status.innerText = "QRコードを映してください";
-            requestAnimationFrame(tick);
-        })
-        .catch(err => {
-            status.innerText = "❌ カメラの起動に失敗しました。ブラウザの設定で許可してください。";
-        });
+    function startCamera() {
+        isScanning = true;
+        videoContainer.style.display = "block";
+        selectArea.innerHTML = "";
+        resultDiv.innerHTML = "";
+        status.innerText = "QRを画面のどこかに映してください";
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } })
+            .then((stream) => {
+                videoStream = stream;
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true);
+                video.play();
+                requestAnimationFrame(tick);
+            })
+            .catch(err => {
+                status.innerText = "❌ カメラの起動に失敗しました。";
+            });
+    }
+
+    function stopCamera() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+            videoStream = null;
+        }
+        isScanning = false;
+        videoContainer.style.display = "none";
+    }
 
     function tick() {
         if (video.readyState === video.HAVE_ENOUGH_DATA && isScanning) {
-            canvas.height = video.videoHeight;
-            canvas.width = video.videoWidth;
+            // 解析用キャンバスの解像度を最適化（高すぎず低すぎず）
+            const scale = 0.8; 
+            canvas.width = video.videoWidth * scale;
+            canvas.height = video.videoHeight * scale;
+            
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // inversionAttempts: "attemptBoth" で白黒反転や暗い場所にも対応
             const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                inversionAttempts: "dontInvert",
+                inversionAttempts: "attemptBoth",
             });
 
             if (code) {
-                isScanning = false; 
+                stopCamera();
                 processQR(code.data);
+                return;
             }
         }
-        requestAnimationFrame(tick);
+        if (isScanning) requestAnimationFrame(tick);
     }
 
     async function processQR(url) {
         try {
-            status.innerText = "⌛ 読み取り成功。準備中...";
+            status.innerText = "⌛ 読み取り成功！";
             const res = await fetch('words.json');
             const db = await res.json();
             currentUnitData = db[url];
 
             if (currentUnitData) {
-                videoContainer.style.display = "none"; // 成功したらカメラを隠す
                 const partNames = Object.keys(currentUnitData);
                 if (partNames.length === 1) {
                     showWords(partNames[0]);
@@ -108,16 +138,14 @@
                 }
             } else {
                 status.innerHTML = `⚠️ 未登録のQRです<br><small>${url}</small>`;
-                // 3秒後にスキャン再開
-                setTimeout(() => { 
-                    if (!currentUnitData) {
-                        isScanning = true; 
-                        status.innerText = "QRコードを映してください";
-                    }
-                }, 3000);
+                const btn = document.createElement('button');
+                btn.className = 'rescan-btn';
+                btn.innerText = "📷 もう一度スキャン";
+                btn.onclick = startCamera;
+                selectArea.appendChild(btn);
             }
         } catch (e) {
-            status.innerText = "JSONの読み込みに失敗しました。";
+            status.innerText = "JSON読み込みエラー。";
         }
     }
 
@@ -132,21 +160,17 @@
             btn.onclick = () => showWords(name);
             selectArea.appendChild(btn);
         });
-        // スキャンし直しボタン
         const rescanBtn = document.createElement('button');
         rescanBtn.className = 'rescan-btn';
-        rescanBtn.innerText = "📷 別のQRをスキャンする";
-        rescanBtn.onclick = restartScan;
+        rescanBtn.innerText = "📷 別のQRを撮り直す";
+        rescanBtn.onclick = startCamera;
         selectArea.appendChild(rescanBtn);
     }
 
     function showWords(name) {
         const words = currentUnitData[name];
-        status.innerHTML = `✅ <b>${name}</b> を表示中`;
-        
-        // 戻るボタン
+        status.innerHTML = `✅ <b>${name}</b>`;
         selectArea.innerHTML = `<button class="back-btn" onclick="showPartButtons()">← 他のPartを選ぶ</button>`;
-        
         resultDiv.innerHTML = words.map(w => `
             <div class="word-item">
                 <span class="pos-badge">${w.pos || '－'}</span>
@@ -158,14 +182,7 @@
         `).join('');
     }
 
-    function restartScan() {
-        isScanning = true;
-        currentUnitData = null;
-        videoContainer.style.display = "block";
-        selectArea.innerHTML = "";
-        resultDiv.innerHTML = "";
-        status.innerText = "QRコードを映してください";
-    }
+    startCamera();
 </script>
 </body>
 </html>
