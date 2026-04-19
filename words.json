@@ -47,6 +47,21 @@
       { "en": "Malay", "ja": "マレー語" },
       { "en": "Tamil", "ja": "タミル語" },
       { "en": "for example", "ja": "例えば" }
+    ],
+    "Unit 1 Read and Think 2": [
+      { "en": "painting", "pos": "名", "ja": "(絵の具で描いた)絵、絵画" },
+      { "en": "wall", "pos": "名", "ja": "かべ" },
+      { "en": "surprised", "pos": "形", "ja": "驚いた、びっくりした" },
+      { "en": "area", "pos": "名", "ja": "区域、場所、地域" },
+      { "en": "India", "pos": "名", "ja": "インド" },
+      { "en": "mosque", "pos": "名", "ja": "モスク、イスラム教寺院" },
+      { "en": "cultere", "pos": "名", "ja": "文化" },
+      { "en": "Chinatown", "ja": "チャイナタウン" },
+      { "en": "Detective Conan", "ja": "名探偵コナン" },
+      { "en": "Hindu", "ja": "ヒンズー教(の)" },
+      { "en": "Little India", "ja": "リトル・インディア" },
+      { "en": "Arab Street", "ja": "アラブ・ストリート" },
+      { "en": "onion-shapped", "ja": "タマネギ型の" }
     ]
   }
 }
