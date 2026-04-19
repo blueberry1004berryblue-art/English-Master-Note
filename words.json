@@ -32,6 +32,21 @@
       { "en": "the Merlion", "ja": "マーライオン" },
       { "en": "you'll", "ja": "you willの短縮形" },
       { "en": "I'll", "ja": "i willの短縮形" }
+    ],
+    "Unit 1 Read and Think 1": [
+      { "en": "meter", "pos": "名", "ja": "メートル" },
+      { "en": "tall", "pos": "形", "ja": "身長(高さ)が・・ある" },
+      { "en": "weigh", "pos": "動", "ja": "・・・の重さがある" },
+      { "en": "ton", "pos": "名", "ja": "トン" },
+      { "en": "found", "pos": "動", "ja": "findの過去形" },
+      { "en": "find", "pos": "動", "ja": "・・・を見つける。発見する" },
+      { "en": "language", "pos": "名", "ja": "言語、言葉" },
+      { "en": "dollar", "pos": "名", "ja": "ドル" },
+      { "en": "example", "pos": "名", "ja": "例、実例" },
+      { "en": "communicate", "pos": "動", "ja": "連絡する、意思の疎通をする" },
+      { "en": "Malay", "ja": "マレー語" },
+      { "en": "Tamil", "ja": "タミル語" },
+      { "en": "for example", "ja": "例えば" }
     ]
   }
 }
