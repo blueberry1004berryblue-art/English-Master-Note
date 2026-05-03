@@ -63,5 +63,38 @@
       { "en": "Arab Street", "ja": "アラブ・ストリート" },
       { "en": "onion-shapped", "ja": "タマネギ型の" }
     ]
+  },
+  "https://s.meijitosho.co.jp/naruhod/#/entt2#ccrzrrp": {
+    "Unit 2 Part 1": [
+      { "en": "especially", "pos": "副", "ja": "特に、とりわけ" },
+      { "en": "order", "pos": "副", "ja": "・・・を注文する" },
+      { "en": "topping", "pos": "名", "ja": "トッピング" },
+      { "en": "various", "pos": "形", "ja": "いろいろな" },
+      { "en": "flavor", "pos": "名", "ja": "(独特な)味、(香織もふくめた)風味" },
+      { "en": "soy sauce", "pos": "名", "ja": "しょうゆ" },
+      { "en": "salt", "pos": "名", "ja": "塩、食塩" },
+      { "en": "and so on", "ja": "・・・など" }
+    ],"Unit 2 Part 2": [
+      { "en": "sppech", "pos": "名", "ja": "スピーチ、演説" },
+      { "en": "sometime", "pos": "副", "ja": "いつか、そのうち" },
+      { "en": "if", "pos": "接", "ja": "[条件・仮定]もし・・・ならば" },
+      { "en": "add", "pos": "動", "ja": "(~に)・・・を加える。足す" },
+      { "en": "butter", "pos": "名", "ja": "バター" },
+      { "en": "would love to", "ja": "・・・したい(のですが)" }
+    ],
+    "Unit 2 Read and Think 1": [
+      { "en": "interested", "pos": "形", "ja": "興味を持っている" },
+      { "en": "for get", "pos": "動", "ja": "(・・・を)忘れる" },
+      { "en": "kind", "pos": "名", "ja": "種類" },
+      { "en": "-based", "pos": "形", "ja": "・・・をベースにした" },
+      { "en": "because", "pos": "接", "ja": "・・・だから、・・・なので" },
+      { "en": "thick", "pos": "形", "ja": "濃い、どろっとした" },
+      { "en": "recommended", "pos": "形", "ja": "おすすめの" },
+      { "en": "manufacturer", "pos": "名", "ja": "製造業者、メーカー" },
+      { "en": "early", "pos": "副", "ja": "早く" },
+      { "en": "seeet corn", "ja": "スイートコーン(甘味種のトウモロコシ)" },
+      { "en": "be interested in", "ja": "・・・に興味がある" },
+      { "en": "... kind(s) of ~", "ja": "・・・種類の~" }
+    ]
   }
 }
