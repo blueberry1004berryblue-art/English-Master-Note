@@ -70,7 +70,7 @@
       { "en": "order", "pos": "副", "ja": "・・・を注文する" },
       { "en": "topping", "pos": "名", "ja": "トッピング" },
       { "en": "various", "pos": "形", "ja": "いろいろな" },
-      { "en": "flavor", "pos": "名", "ja": "(独特な)味、(香織もふくめた)風味" },
+      { "en": "flavor", "pos": "名", "ja": "(独特な)味、(香りもふくめた)風味" },
       { "en": "soy sauce", "pos": "名", "ja": "しょうゆ" },
       { "en": "salt", "pos": "名", "ja": "塩、食塩" },
       { "en": "and so on", "ja": "・・・など" }
@@ -95,6 +95,23 @@
       { "en": "seeet corn", "ja": "スイートコーン(甘味種のトウモロコシ)" },
       { "en": "be interested in", "ja": "・・・に興味がある" },
       { "en": "... kind(s) of ~", "ja": "・・・種類の~" }
+    ],
+    "Unit 2 Read and Think 2": [
+      { "en": "reflect", "pos": "動", "ja": "(物事・考えなど)を反映する" },
+      { "en": "climate", "pos": "名", "ja": "気候" },
+      { "en": "lives", "pos": "名", "ja": "lifeの複数形" },
+      { "en": "creativity", "pos": "名", "ja": "創造性(力)、独創性(力)" },
+      { "en": "chef", "pos": "名", "ja": "シェフ、コック長" },
+      { "en": "foreign", "pos": "形", "ja": "外国(へ[から])の" },
+      { "en": "variation", "pos": "名", "ja": "変化、変種" },
+      { "en": "Italy", "pos": "名", "ja": "イタリア" },
+      { "en": "create", "pos": "動", "ja": "・・・を創造する、つくり出す" },
+      { "en": "sauce", "pos": "名", "ja": "ソース" },
+      { "en": "change", "pos": "動", "ja": "変わる、変化する" },
+      { "en": "Naples", "ja": "ナポリ[都市名]" },
+      { "en": "come from", "ja": "・・・出身である、・・・から来ている" },
+      { "en": "Here is ....", "ja": "これが・・・です。ここい・・・があります。" },
+      { "en": "name ... after ~", "ja": "~にちなんで(人など)を・・・を名付ける" }
     ]
   }
 }
