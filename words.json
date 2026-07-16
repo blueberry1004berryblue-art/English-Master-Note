@@ -124,5 +124,24 @@
       { "en": "ask ... a favor", "ja": "・・・にお願いする" },
       { "en": "Say cheese!", "ja": "はい、チーズ！" }
     ]
-  }
+  },
+  "https://s.meijitosho.co.jp/naruhod/#/entt2#kxkrlkr": {
+    "Unit 3": [
+      { "en": "career", "pos": "名", "ja": "職業" },
+      { "en": "imformation", "pos": "名", "ja": "情報" },
+      { "en": "international", "pos": "形", "ja": "国際的な" },
+      { "en": "nursery", "pos": "名", "ja": "保育園、託児所" },
+      { "en": "note", "pos": "名", "ja": "メモ" },
+      { "en": "own", "pos": "形", "ja": "自分自身の、独自の" },
+      { "en": "tag", "pos": "名", "ja": "つけ札、下げ札、荷札" },
+      { "en": "chopsticks", "pos": "名", "ja": "[ふつうchopstiksで](食事用の)はし" },
+      { "en": "picture book", "pos": "名", "ja": "(主に子供用の)絵本、図鑑" },
+      { "en": "Career Day", "ja": "職場体験日" },
+      { "en": "chose", "pos": "動", "ja": "choose(・・・を選ぶ)の過去形" },
+      { "en": "choose", "pos": "動", "ja": "・・・を選ぶ" },
+      { "en": "colorful", "pos": "形", "ja": "色彩に富んだ" },
+      { "en": "illustration", "pos": "名", "ja": "例、挿絵、図、イラスト、(図・例等による)説明" },
+      { "en": "The Very Hungry Caterpillar", "ja": "[はらぺこあおむし]" }
+    ]
+  },
 }
